@@ -512,6 +512,9 @@ int bwa_parma(int argc, char *argv[]) {
 
 	if (optind + 2 > argc) {
 		fprintf(stderr, "\n");
+		fprintf(stderr, "Program: PARMA addon for bwa version 0.7.8\n");
+		fprintf(stderr, "Version: 0.5 alpha\n");
+		fprintf(stderr, "Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
 		fprintf(stderr, "Usage:   bwa parma [options] <prefix> <in.fq>\n\n");
 		fprintf(stderr,
 				"Options: -n NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
