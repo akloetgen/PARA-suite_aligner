@@ -1,0 +1,84 @@
+NEW ALGORITHM: X=2 ON highT-C; Dauer 2min
+matched correctly:				1154559
+mapped overall:                 1261601
+all reads:                      1664423
+mapped overall percentage:      0.757981
+precision:                      0.91515386
+sensitivity:                    0.6936692
+f1 score:                       0.78916574
+
+BWA n=2; Dauer 4min
+matched correctly:              1068279
+mapped overall:                 1144740
+all reads:                      1664423
+mapped overall percentage:      0.6877699
+precision:                      0.9332067
+sensitivity:                    0.64183146
+f1 score:                       0.7605675
+
+
+BWA n=3; Dauer >3 mal so langsam wie alnep
+
+
+
+NEW ALGO: X=2 ON MID_T2C DATA, taking 3600 CPU seconds
+matched correctly:            1229289
+mapped overall:                 1316654
+all reads:                      1688199
+mapped overall percentage:      0.77991635
+precision:                      0.9336462
+sensitivity:                    0.7281659
+f1 score:                       0.81820244
+
+
+BWA: n=2 ON MID_T2C DATA, taking 1500 CPU seconds
+matched correctly:            1199235
+mapped overall:                 1254881
+all reads:                      1688199
+mapped overall percentage:      0.7433253
+precision:                      0.95565635
+sensitivity:                    0.7103635
+f1 score:                       0.8149523
+
+
+
+
+NEW ALGORITHM: X=2 ON 100T2C; Dauer 2min NOW WITH 8% T-C RATE PROB!!!!!!!!!
+matched correctly:              1154558
+mapped overall:                 1261601
+all reads:                      1688975
+mapped overall percentage:      0.7469625
+precision:                      0.915153
+sensitivity:                    0.683585
+f1 score:                       0.78259844
+
+improved aligner with X=2 on 100T2C; Dauer: 924 CPU seconds
+matched correctly:              1153080
+mapped overall:                 1201925
+all reads:                      1688975
+mapped overall percentage:      0.7116298
+precision:                      0.959361
+sensitivity:                    0.68270993
+f1 score:                       0.79773074
+
+
+BWA 2mm; Dauer XY CPU seconds on 100T2C
+matched correctly:            1068279
+mapped overall:                 1144740
+all reads:                      1688975
+mapped overall percentage:      0.67777205
+precision:                      0.9332067
+sensitivity:                    0.63250136
+f1 score:                       0.7539777
+
+
+NEW ALGORITHM combined with transcriptomic mapping on 100T2C
+matched correctly:              1212890
+mapped overall:                 1266257
+all reads:                      1688975
+mapped overall percentage:      0.7497192
+precision:                      0.9578545
+sensitivity:                    0.71812195
+f1 score:                       0.82084244
+
+
