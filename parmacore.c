@@ -80,7 +80,8 @@ int load_error_profile(gap_opt_t *opt, const char *ep_filename) {
 		int k = 0;
 		while (fgets(line, line_length, ep_file)) {
 			sscanf(line, "%lf\t%lf\t%lf\t%lf", &A, &C, &G, &T);
-			fprintf(stderr, "[%s] A=%f; C=%f, G=%f, T=%f\n", __func__, A, C, G, T);
+			fprintf(stderr, "[%s] A=%f; C=%f, G=%f, T=%f\n", __func__, A, C, G,
+					T);
 
 			opt->profile.position_profile[k][0] = A;
 			opt->profile.position_profile[k][1] = C;
@@ -99,30 +100,57 @@ int load_error_profile(gap_opt_t *opt, const char *ep_filename) {
 		return 1;
 	}
 
+	return 0;
+}
+
+int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 	// CALCULATE MAX THRESHOLD FOR P-VAL DURING BACKWARD-SEARCH
 	int i, j;
 	double avg_match = 0.0;
 	double avg_mm = 0.0;
 	double best_mm = 0.0;
-	for (i = 0; i < 4; i++) {
-		for (j = 0; j < 4; j++) {
-			if (i == j) {
-				avg_match += opt->profile.position_profile[i][j];
-			} else {
-				avg_mm += opt->profile.position_profile[i][j];
-				if (opt->profile.position_profile[i][j] > best_mm) {
-					best_mm = opt->profile.position_profile[i][j];
+	if (including_indels) {
+		double indel = opt->profile.indels[INSERTION]
+				+ opt->profile.indels[DELETION];
+		double bias = ((double) 1.0 - indel);
+
+		for (i = 0; i < 4; i++) {
+			for (j = 0; j < 4; j++) {
+				if (i == j) {
+					avg_match += (double) opt->profile.position_profile[i][j]
+							* bias;
+				} else {
+					avg_mm += (double) opt->profile.position_profile[i][j]
+							* bias;
+					if ((double) opt->profile.position_profile[i][j] * bias
+							> best_mm) {
+						best_mm = (double) opt->profile.position_profile[i][j]
+								* bias;
+					}
+				}
+			}
+			avg_mm += indel;
+		}
+		opt->avg_match = (double) avg_match / 4;
+		opt->avg_mm = (double) avg_mm / 20;
+		opt->best_mm = (double) best_mm;
+	} else {
+		for (i = 0; i < 4; i++) {
+			for (j = 0; j < 4; j++) {
+				if (i == j) {
+					avg_match += opt->profile.position_profile[i][j];
+				} else {
+					avg_mm += opt->profile.position_profile[i][j];
+					if (opt->profile.position_profile[i][j] > best_mm) {
+						best_mm = opt->profile.position_profile[i][j];
+					}
 				}
 			}
 		}
+		opt->avg_match = (double) avg_match / 4;
+		opt->avg_mm = (double) avg_mm / 12;
+		opt->best_mm = (double) best_mm;
 	}
-	opt->avg_match = (double) avg_match / 4;
-	opt->avg_mm = (double) avg_mm / 12;
-	opt->best_mm = (double) best_mm;
-	//fprintf(stderr, "test: 2.5^3=%1.10f\n", pow((double) 2.5, 3));
-	//opt->p_threshold = (double) pow((double) avg_match, (opt->longest_read - opt->X)) * pow((double) avg_mm, opt->X);
-	//fprintf(stderr, "avg_match=%1.10f and avg_mm=%1.30f\n", avg_match, avg_mm);
-	//fprintf(stderr, "p_threshold=%1.100f\n", opt->p_threshold);
 
 	return 0;
 }
@@ -404,6 +432,7 @@ int bwa_parma(int argc, char *argv[]) {
 	int c, opte = -1;
 	gap_opt_t *opt;
 	char *prefix;
+	int error_profile_set = 0, indel_profile_set = 0;
 
 	opt = gap_init_opt_parma();
 	while ((c = getopt(argc, argv,
@@ -421,12 +450,14 @@ int bwa_parma(int argc, char *argv[]) {
 				free(opt);
 				return 1;
 			}
+			error_profile_set = 1;
 			break;
 		case 'g':
 			if (load_indel_profile(opt, optarg)) {
 				free(opt);
 				return 1;
 			}
+			indel_profile_set = 1;
 			break;
 		case 'o':
 			opt->max_gapo = atoi(optarg);
@@ -504,6 +535,17 @@ int bwa_parma(int argc, char *argv[]) {
 			return 1;
 		}
 	}
+	if (error_profile_set && indel_profile_set) {
+		fprintf(stderr,
+				"[%s] calculate average values for matches and mismatches/indels\n",
+				__func__);
+		calculateAverageProbabilites(opt, 1);
+	} else if (error_profile_set) {
+		fprintf(stderr,
+				"[%s] calculate average values for matches and mismatches (excluding indels)\n",
+				__func__);
+		calculateAverageProbabilites(opt, 0);
+	}
 
 	if (opte > 0) {
 		opt->max_gape = opte;
@@ -514,7 +556,8 @@ int bwa_parma(int argc, char *argv[]) {
 		fprintf(stderr, "\n");
 		fprintf(stderr, "Program: PARMA addon for bwa version 0.7.8\n");
 		fprintf(stderr, "Version: 0.5 alpha\n");
-		fprintf(stderr, "Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
+		fprintf(stderr,
+				"Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
 		fprintf(stderr, "Usage:   bwa parma [options] <prefix> <in.fq>\n\n");
 		fprintf(stderr,
 				"Options: -n NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
