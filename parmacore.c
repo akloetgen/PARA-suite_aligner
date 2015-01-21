@@ -195,9 +195,14 @@ gap_opt_t *gap_init_opt_parma() {
 	return o;
 }
 
-int parma_cal_avgdiff(int length, double avg_err) {
+int parma_cal_avgdiff(gap_opt_t *opt, int length, double avg_err) {
 	int temp_allowed_mm;
-	if ((temp_allowed_mm = floor((double) length * avg_err * 10)) > 2) {
+	//if ((temp_allowed_mm = floor((double) length * avg_err * 10)) > 2) {
+	if ((temp_allowed_mm = floor(
+			(double) (4 - opt->profile.position_profile[0][0]
+					+ opt->profile.position_profile[1][1]
+					+ opt->profile.position_profile[2][2]
+					+ opt->profile.position_profile[3][3]) * length)) > 2) {
 		return temp_allowed_mm;
 	}
 	return 2;
@@ -251,7 +256,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 
 	//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(max_len, BWA_AVG_ERR, opt->fnr);
 	if (opt->X == -1)
-		local_opt.X = parma_cal_avgdiff(avg_len, opt->avg_mm);
+		local_opt.X = parma_cal_avgdiff(opt, avg_len, opt->avg_mm);
 	//fprintf(stderr, "[%s] for read lenght %d, average error X = %d\n", __func__, avg_len, local_opt.X);
 
 	if (local_opt.X < local_opt.max_gapo)
@@ -283,7 +288,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 		// HIER DAS SELBE WIE OBEN: ERSETZEN DURCH EP?!?!
 		//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(p->len, BWA_AVG_ERR, opt->fnr);
 		if (opt->X == -1)
-			local_opt.X = parma_cal_avgdiff(avg_len, opt->avg_mm);
+			local_opt.X = parma_cal_avgdiff(opt, avg_len, opt->avg_mm);
 		local_opt.seed_len =
 				opt->seed_len < p->len ? opt->seed_len : 0x7fffffff;
 		if (p->len > opt->seed_len)
