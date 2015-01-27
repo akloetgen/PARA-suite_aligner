@@ -114,26 +114,44 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 				+ opt->profile.indels[DELETION];
 		double bias = ((double) 1.0 - indel);
 
+		/*	for (i = 0; i < 4; i++) {
+		 for (j = 0; j < 4; j++) {
+		 if (i == j) {
+		 avg_match += (double) opt->profile.position_profile[i][j]
+		 * bias;
+		 } else {
+		 avg_mm += (double) opt->profile.position_profile[i][j]
+		 * bias;
+		 if ((double) opt->profile.position_profile[i][j] * bias
+		 > best_mm) {
+		 best_mm = (double) opt->profile.position_profile[i][j]
+		 * bias;
+		 }
+		 }
+		 }
+
+		 }*/
 		for (i = 0; i < 4; i++) {
 			for (j = 0; j < 4; j++) {
 				if (i == j) {
-					avg_match += (double) opt->profile.position_profile[i][j]
-							* bias;
+					avg_match += (double) opt->profile.position_profile[i][j];
 				} else {
-					avg_mm += (double) opt->profile.position_profile[i][j]
-							* bias;
-					if ((double) opt->profile.position_profile[i][j] * bias
+					avg_mm += (double) opt->profile.position_profile[i][j];
+					if ((double) opt->profile.position_profile[i][j]
 							> best_mm) {
-						best_mm = (double) opt->profile.position_profile[i][j]
-								* bias;
+						best_mm = (double) opt->profile.position_profile[i][j];
 					}
 				}
 			}
-			avg_mm += indel;
 		}
-		opt->avg_match = (double) avg_match / 4;
-		opt->avg_mm = (double) avg_mm / 20;
+		avg_mm += indel;
+		avg_match += bias;
+		opt->avg_match = (double) avg_match / 5;
+		opt->avg_mm = (double) avg_mm / 14;
+		//opt->avg_mm = (double) avg_mm / 16;
 		opt->best_mm = (double) best_mm;
+		fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f\n", opt->avg_match,
+				opt->avg_mm, opt->best_mm);
 	} else {
 		for (i = 0; i < 4; i++) {
 			for (j = 0; j < 4; j++) {
@@ -150,6 +168,8 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 		opt->avg_match = (double) avg_match / 4;
 		opt->avg_mm = (double) avg_mm / 12;
 		opt->best_mm = (double) best_mm;
+		fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f", opt->avg_match,
+				opt->avg_mm, opt->best_mm);
 	}
 
 	return 0;
@@ -189,20 +209,23 @@ gap_opt_t *gap_init_opt_parma() {
 	}
 	/*o->profile.indels[INSERTION] = 0.00025;
 	 o->profile.indels[DELETION] = 0.0065;*/
-	o->profile.indels[INSERTION] = 0.000075;
-	o->profile.indels[DELETION] = 0.000075;
+	/*o->profile.indels[INSERTION] = 0.000075;
+	 o->profile.indels[DELETION] = 0.000075;*/
+	o->profile.indels[INSERTION] = 0.001658;
+	o->profile.indels[DELETION] = 0.001899;
 	o->X = -1;
 	return o;
 }
 
-int parma_cal_avgdiff(gap_opt_t *opt, int length, double avg_err) {
+int parma_cal_avgdiff(const gap_opt_t *opt, int length) {
 	int temp_allowed_mm;
 	//if ((temp_allowed_mm = floor((double) length * avg_err * 10)) > 2) {
-	if ((temp_allowed_mm = floor(
-			(double) (4 - opt->profile.position_profile[0][0]
-					+ opt->profile.position_profile[1][1]
-					+ opt->profile.position_profile[2][2]
-					+ opt->profile.position_profile[3][3]) * length)) > 2) {
+	if ((temp_allowed_mm = floor((double) length * (opt->avg_mm * 14))) > 2) {
+		/*if ((temp_allowed_mm = floor(
+		 (double) (4 - opt->profile.position_profile[0][0]
+		 - opt->profile.position_profile[1][1]
+		 - opt->profile.position_profile[2][2]
+		 - opt->profile.position_profile[3][3]) * length)) > 2) {*/
 		return temp_allowed_mm;
 	}
 	return 2;
@@ -256,7 +279,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 
 	//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(max_len, BWA_AVG_ERR, opt->fnr);
 	if (opt->X == -1)
-		local_opt.X = parma_cal_avgdiff(opt, avg_len, opt->avg_mm);
+		local_opt.X = parma_cal_avgdiff(opt, avg_len);
 	//fprintf(stderr, "[%s] for read lenght %d, average error X = %d\n", __func__, avg_len, local_opt.X);
 
 	if (local_opt.X < local_opt.max_gapo)
@@ -288,7 +311,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 		// HIER DAS SELBE WIE OBEN: ERSETZEN DURCH EP?!?!
 		//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(p->len, BWA_AVG_ERR, opt->fnr);
 		if (opt->X == -1)
-			local_opt.X = parma_cal_avgdiff(opt, avg_len, opt->avg_mm);
+			local_opt.X = parma_cal_avgdiff(opt, avg_len);
 		local_opt.seed_len =
 				opt->seed_len < p->len ? opt->seed_len : 0x7fffffff;
 		if (p->len > opt->seed_len)
@@ -555,6 +578,10 @@ int bwa_parma(int argc, char *argv[]) {
 	if (opte > 0) {
 		opt->max_gape = opte;
 		opt->mode &= ~BWA_MODE_GAPE;
+	}
+	int q = 15;
+	for (q = 15; q < 40; q++) {
+		fprintf(stderr, "length=%d; X=%d\n", q, parma_cal_avgdiff(opt, q));
 	}
 
 	if (optind + 2 > argc) {

@@ -20,7 +20,7 @@ extern "C" {
 	void parma_aln_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt);
 
 	void parma_cal_sa_reg_gap(int tid, bwt_t *const bwt, int n_seqs, bwa_seq_t *seqs, const gap_opt_t *opt);
-	int parma_cal_avgdiff(int length, double avg_err);
+	int parma_cal_avgdiff(const gap_opt_t *opt, int length);
 
 #ifdef __cplusplus
 }
