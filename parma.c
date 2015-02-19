@@ -150,8 +150,8 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 	double p_threshold = (double) pow((double) opt->avg_match, (len - opt->X))
 			* pow((double) opt->avg_mm, opt->X);
 	// calc number of maximal mms allowed:
-	int i, k;
-	double temp_best_mm = 0.0;
+
+	/*double temp_best_mm = 0.0;
 	for (i = 0; i < 4; i++) {
 		for (k = 0; k < 4; k++) {
 			if (i != k && opt->profile.position_profile[i][k] > temp_best_mm) {
@@ -159,11 +159,12 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 			}
 		}
 	}
+	fprintf(stderr, "temp_best_mm=%f; best_mm=%f\n", temp_best_mm, opt->best_mm);*/
 	double temp_val = 1.0;
 	int max_mm = 0;
 	while (temp_val > p_threshold) {
 		temp_val = (double) pow((double) opt->avg_match, (len - max_mm))
-				* pow((double) temp_best_mm, max_mm);
+				* pow((double) opt->best_mm, max_mm);
 		max_mm++;
 	}
 
@@ -328,7 +329,8 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 		// VERBIETTET DAS NICHT IN DER REGEL DEN 3. T-C ?!?!?!??!?!?!?!?!?!?!?!?!?
 		//if (e.ep_p_val < (p_threshold * opt->avg_mm)) {
 
-		// OLD CHECK FOR HOW MANY MMs ARE STILL ALLOWED; TODO WIEDER RAUSNEHMEN!
+		/*
+		// OLD CHECK FOR HOW MANY MMs ARE STILL ALLOWED
 		if (i > 0) {
 			int ii = i - (len - opt->seed_len);
 			if (width[i-1].bid > m-1) allow_diff = 0;
@@ -338,7 +340,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 				else if (seed_width[ii-1].bid == m_seed-1 && seed_width[ii].bid == m_seed-1
 						&& seed_width[ii-1].w == seed_width[ii].w) allow_M = 0;
 			}
-		}
+		}*/
 		if (p_threshold >= (e.ep_p_val * opt->best_mm) || p_threshold == 0) {
 			//fprintf(stderr, "p-val too small at i=%d\n", i);
 			allow_diff = allow_M = 0;
