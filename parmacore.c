@@ -150,8 +150,8 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 		opt->avg_mm = (double) avg_mm / 14;
 		//opt->avg_mm = (double) avg_mm / 16;
 		opt->best_mm = (double) best_mm;
-		fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f\n", opt->avg_match,
-				opt->avg_mm, opt->best_mm);
+		//fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f\n", opt->avg_match,
+		//		opt->avg_mm, opt->best_mm);
 	} else {
 		for (i = 0; i < 4; i++) {
 			for (j = 0; j < 4; j++) {
@@ -168,8 +168,8 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 		opt->avg_match = (double) avg_match / 4;
 		opt->avg_mm = (double) avg_mm / 12;
 		opt->best_mm = (double) best_mm;
-		fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f", opt->avg_match,
-				opt->avg_mm, opt->best_mm);
+		//fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f", opt->avg_match,
+		//	opt->avg_mm, opt->best_mm);
 	}
 
 	return 0;
@@ -579,10 +579,11 @@ int bwa_parma(int argc, char *argv[]) {
 		opt->max_gape = opte;
 		opt->mode &= ~BWA_MODE_GAPE;
 	}
-	int q = 15;
-	for (q = 15; q < 40; q++) {
-		fprintf(stderr, "length=%d; X=%d\n", q, parma_cal_avgdiff(opt, q));
-	}
+
+	/*	int q = 15;
+	 for (q = 15; q < 40; q++) {
+	 fprintf(stderr, "length=%d; X=%d\n", q, parma_cal_avgdiff(opt, q));
+	 }*/
 
 	if (optind + 2 > argc) {
 		fprintf(stderr, "\n");
