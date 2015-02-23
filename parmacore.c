@@ -48,7 +48,6 @@ int load_indel_profile(gap_opt_t *opt, const char *indel_filename) {
 			sscanf(line, "%lf\t%lf", &insertion, &deletion);
 			fprintf(stderr, "[%s] insertion rate=%lf\n", __func__, insertion);
 			fprintf(stderr, "[%s] deletion rate=%lf\n", __func__, deletion);
-			//opt->profile.indels
 			opt->profile.indels[INSERTION] = insertion;
 			opt->profile.indels[DELETION] = deletion;
 		}
@@ -88,7 +87,6 @@ int load_error_profile(gap_opt_t *opt, const char *ep_filename) {
 			opt->profile.position_profile[k][2] = G;
 			opt->profile.position_profile[k][3] = T;
 			k++;
-			//fprintf(stderr, "A=%Lf; C=%Lf, G=%Lf, T%Lf\n", opt->profile.position_profile[k][0],opt->profile.position_profile[k][1],opt->profile.position_profile[k][2],opt->profile.position_profile[k][3]);
 		}
 		fclose(ep_file);
 	} else {
@@ -96,7 +94,6 @@ int load_error_profile(gap_opt_t *opt, const char *ep_filename) {
 				"[%s] ABORT: Couldn't read error profile from file \"%s\". Probably the"
 						" file is missing or rights are not set correctly...\n",
 				__func__, ep_filename);
-		//exit(EXIT_FAILURE);
 		return 1;
 	}
 
@@ -114,23 +111,6 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 				+ opt->profile.indels[DELETION];
 		double bias = ((double) 1.0 - indel);
 
-		/*	for (i = 0; i < 4; i++) {
-		 for (j = 0; j < 4; j++) {
-		 if (i == j) {
-		 avg_match += (double) opt->profile.position_profile[i][j]
-		 * bias;
-		 } else {
-		 avg_mm += (double) opt->profile.position_profile[i][j]
-		 * bias;
-		 if ((double) opt->profile.position_profile[i][j] * bias
-		 > best_mm) {
-		 best_mm = (double) opt->profile.position_profile[i][j]
-		 * bias;
-		 }
-		 }
-		 }
-
-		 }*/
 		for (i = 0; i < 4; i++) {
 			for (j = 0; j < 4; j++) {
 				if (i == j) {
@@ -148,10 +128,7 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 		avg_match += bias;
 		opt->avg_match = (double) avg_match / 5;
 		opt->avg_mm = (double) avg_mm / 14;
-		//opt->avg_mm = (double) avg_mm / 16;
 		opt->best_mm = (double) best_mm;
-		//fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f\n", opt->avg_match,
-		//		opt->avg_mm, opt->best_mm);
 	} else {
 		for (i = 0; i < 4; i++) {
 			for (j = 0; j < 4; j++) {
@@ -168,8 +145,6 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 		opt->avg_match = (double) avg_match / 4;
 		opt->avg_mm = (double) avg_mm / 12;
 		opt->best_mm = (double) best_mm;
-		//fprintf(stderr, "avg_match=%f; avg_mm=%f; best_mm=%f", opt->avg_match,
-		//	opt->avg_mm, opt->best_mm);
 	}
 
 	return 0;
@@ -183,7 +158,6 @@ gap_opt_t *gap_init_opt_parma() {
 	o->s_mm = 3;
 	o->s_gapo = 11;
 	o->s_gape = 4;
-	// DISALLOW GAPS!!! MUCH FASTER AND DOESNT HAVE ANY INFLUENCE ON THE ALREADY SHORT READS OF <26BP!!! OTHERWISE ACTIVATE GAP BY SETTING GAPO = 1
 	o->max_diff = -1;
 	o->max_gapo = 1;
 	o->max_gape = -1;
@@ -207,25 +181,15 @@ gap_opt_t *gap_init_opt_parma() {
 			}
 		}
 	}
-	/*o->profile.indels[INSERTION] = 0.00025;
-	 o->profile.indels[DELETION] = 0.0065;*/
-	/*o->profile.indels[INSERTION] = 0.000075;
-	 o->profile.indels[DELETION] = 0.000075;*/
-	o->profile.indels[INSERTION] = 0.001658;
-	o->profile.indels[DELETION] = 0.001899;
+	o->profile.indels[INSERTION] = 0.0015;
+	o->profile.indels[DELETION] = 0.0015;
 	o->X = -1;
 	return o;
 }
 
 int parma_cal_avgdiff(const gap_opt_t *opt, int length) {
 	int temp_allowed_mm;
-	//if ((temp_allowed_mm = floor((double) length * avg_err * 10)) > 2) {
 	if ((temp_allowed_mm = floor((double) length * (opt->avg_mm * 14))) > 2) {
-		/*if ((temp_allowed_mm = floor(
-		 (double) (4 - opt->profile.position_profile[0][0]
-		 - opt->profile.position_profile[1][1]
-		 - opt->profile.position_profile[2][2]
-		 - opt->profile.position_profile[3][3]) * length)) > 2) {*/
 		return temp_allowed_mm;
 	}
 	return 2;
@@ -591,7 +555,7 @@ int bwa_parma(int argc, char *argv[]) {
 		fprintf(stderr, "Version: 0.5 alpha\n");
 		fprintf(stderr,
 				"Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
-		fprintf(stderr, "Usage:   bwa parma [options] <prefix> <in.fq>\n\n");
+		fprintf(stderr, "Usage:   bwa parma [options] <reference_prefix> <in.fq>\n\n");
 		fprintf(stderr,
 				"Options: -n NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
 				opt->X);
@@ -650,7 +614,7 @@ int bwa_parma(int argc, char *argv[]) {
 				"         -Y        filter Casava-filtered sequences\n");
 		fprintf(stderr, "         -I        insertion rate [%f]\n",
 				opt->profile.indels[INSERTION]);
-		fprintf(stderr, "         -D        insertion rate [%f]\n",
+		fprintf(stderr, "         -D        deletion rate [%f]\n",
 				opt->profile.indels[DELETION]);
 		fprintf(stderr, "\n");
 		return 1;
