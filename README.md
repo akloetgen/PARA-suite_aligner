@@ -11,10 +11,10 @@ For an easy use of the PARMA algorithm we recommend the additional download of t
 # Usage
 	bwa parma [options] <reference_prefix> <input>
 	
-## Help
+### Help
 	bwa parma
 	
-## Example on testdata
+### Example on testdata
 	bwa index examples/references/reference_chr1.fa
-	bwa parma -p examples/references/reference_chr1.errorprofile -f examples/mapping/testout_simulation_mapped_PARMA.sai examples/references/reference_chr1.fa examples/simulation/testout_simulation.fastq
-	bwa samse examples/references/reference_chr1.fa examples/mapping/testout_simulation_mapped_PARMA.sai examples/simulation/testout_simulation.fastq > examples/mapping/testout_simulation_mapped_PARMA.sam
+	bwa parma -p examples/references/reference_chr1.errorprofile -f examples/mapping/testout_simulation_mapped_PARMA.sai examples/references/reference_chr1.fa examples/references/testout_simulation.fastq
+	bwa samse examples/references/reference_chr1.fa examples/mapping/testout_simulation_mapped_PARMA.sai examples/references/testout_simulation.fastq > examples/mapping/testout_simulation_mapped_PARMA.sam
