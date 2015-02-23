@@ -15,6 +15,6 @@ For an easy use of the PARMA algorithm we recommend the additional download of t
 	bwa parma
 	
 ### Example on testdata
-	bwa index examples/references/reference_chr1.fa
-	bwa parma -p examples/references/reference_chr1.errorprofile -f examples/mapping/testout_simulation_mapped_PARMA.sai examples/references/reference_chr1.fa examples/references/testout_simulation.fastq
-	bwa samse examples/references/reference_chr1.fa examples/mapping/testout_simulation_mapped_PARMA.sai examples/references/testout_simulation.fastq > examples/mapping/testout_simulation_mapped_PARMA.sam
+	bwa index examples/reference_chr1.fa
+	bwa parma -p examples/reference_chr1.errorprofile -f examples/testout_simulation_mapped_PARMA.sai examples/reference_chr1.fa examples/testout_simulation.fastq
+	bwa samse examples/reference_chr1.fa examples/testout_simulation_mapped_PARMA.sai examples/testout_simulation.fastq > examples/testout_simulation_mapped_PARMA.sam
