@@ -428,9 +428,9 @@ int bwa_parma(int argc, char *argv[]) {
 
 	opt = gap_init_opt_parma();
 	while ((c = getopt(argc, argv,
-			"n:p:g:o:e:i:d:l:k:LR:m:t:NM:O:E:q:f:b012YB:I:D:")) >= 0) {
+			"X:p:g:o:e:i:d:l:k:LR:m:t:NM:O:E:q:f:b012YB:I:D:")) >= 0) {
 		switch (c) {
-		case 'n':
+		case 'X':
 			opt->X = atoi(optarg);
 			break;
 			/*case 'n':
@@ -557,7 +557,7 @@ int bwa_parma(int argc, char *argv[]) {
 				"Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
 		fprintf(stderr, "Usage:   bwa parma [options] <reference_prefix> <in.fq>\n\n");
 		fprintf(stderr,
-				"Options: -n NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
+				"Options: -X NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
 				opt->X);
 		/*fprintf(stderr, "Options: -n NUM    max #diff (int) or missing prob under %.2f err rate (float) [%.2f]\n",
 		 BWA_AVG_ERR, opt->fnr);*/
