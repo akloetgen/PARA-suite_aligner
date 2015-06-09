@@ -249,6 +249,12 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 	if (local_opt.X < local_opt.max_gapo)
 		local_opt.max_gapo = local_opt.max_diff;
 	//int min_init_value = -1;
+
+	// IMPORTANT IMPROVEMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	// for X=-1 set stack by using local_opt.max_diff or any other appropriate value
+	// that depends on the actual error profile rather than generating a too small stack
+	// that produces a segmentation fault
+	// IMPORTANT IMPROVEMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 	stack = gap_init_stack_parma(local_opt.X + 1, local_opt.max_gapo,
 			local_opt.max_gape, &local_opt);
 	//fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC); t = clock();
@@ -275,7 +281,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 		// HIER DAS SELBE WIE OBEN: ERSETZEN DURCH EP?!?!
 		//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(p->len, BWA_AVG_ERR, opt->fnr);
 		if (opt->X == -1)
-			local_opt.X = parma_cal_avgdiff(opt, avg_len);
+			local_opt.X = parma_cal_avgdiff(opt, p->len);
 		local_opt.seed_len =
 				opt->seed_len < p->len ? opt->seed_len : 0x7fffffff;
 		if (p->len > opt->seed_len)
@@ -544,8 +550,8 @@ int bwa_parma(int argc, char *argv[]) {
 		opt->mode &= ~BWA_MODE_GAPE;
 	}
 
-	/*	int q = 15;
-	 for (q = 15; q < 40; q++) {
+	/*int q;
+	 for (q = 14; q < 40; q++) {
 	 fprintf(stderr, "length=%d; X=%d\n", q, parma_cal_avgdiff(opt, q));
 	 }*/
 
@@ -555,7 +561,8 @@ int bwa_parma(int argc, char *argv[]) {
 		fprintf(stderr, "Version: 0.5 alpha\n");
 		fprintf(stderr,
 				"Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
-		fprintf(stderr, "Usage:   bwa parma [options] <reference_prefix> <in.fq>\n\n");
+		fprintf(stderr,
+				"Usage:   bwa parma [options] <reference_prefix> <in.fq>\n\n");
 		fprintf(stderr,
 				"Options: -X NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
 				opt->X);
