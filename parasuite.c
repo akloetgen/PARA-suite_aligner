@@ -1,5 +1,5 @@
 /*
- * parma.c
+ * parasuite.c
  *
  *  Created on: 20.08.2014
  *      Author: akloetgen
@@ -9,8 +9,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include "parma.h"
-#include "parmacore.h"
+#include "parasuite.h"
+#include "parasuitecore.h"
 #include "bwtaln.h"
 
 #ifdef USE_MALLOC_WRAPPERS
@@ -21,26 +21,26 @@
 #define STATE_I 1
 #define STATE_D 2
 
-#define aln_score_parma(m,o,e,p) ((m)*(p)->s_mm + (o)*(p)->s_gapo + (e)*(p)->s_gape)
+#define aln_score_parasuite(m,o,e,p) ((m)*(p)->s_mm + (o)*(p)->s_gapo + (e)*(p)->s_gape)
 //#define aln_score_ep(X,i,p) (pow((p)->avg_match, i-X) * pow((p)->avg_mm, X))
 
-gap_stack_t_parma *gap_init_stack2_parma(int max_score) {
-	gap_stack_t_parma *stack;
-	stack = (gap_stack_t_parma*) calloc(1, sizeof(gap_stack_t_parma));
+gap_stack_t_parasuite *gap_init_stack2_parasuite(int max_score) {
+	gap_stack_t_parasuite *stack;
+	stack = (gap_stack_t_parasuite*) calloc(1, sizeof(gap_stack_t_parasuite));
 	//fprintf(stderr, "max_score=%d\n", max_score);
 	stack->n_stacks = max_score;
-	stack->stacks = (gap_stack1_t_parma*) calloc(stack->n_stacks,
-			sizeof(gap_stack1_t_parma));
+	stack->stacks = (gap_stack1_t_parasuite*) calloc(stack->n_stacks,
+			sizeof(gap_stack1_t_parasuite));
 	return stack;
 }
 
-gap_stack_t_parma *gap_init_stack_parma(int max_mm, int max_gapo, int max_gape,
+gap_stack_t_parasuite *gap_init_stack_parasuite(int max_mm, int max_gapo, int max_gape,
 		const gap_opt_t *opt) {
-	return gap_init_stack2_parma(
-			aln_score_parma(max_mm + 1, max_gapo + 1, max_gape + 1, opt));
+	return gap_init_stack2_parasuite(
+			aln_score_parasuite(max_mm + 1, max_gapo + 1, max_gape + 1, opt));
 }
 
-void gap_destroy_stack_parma(gap_stack_t_parma *stack) {
+void gap_destroy_stack_parasuite(gap_stack_t_parasuite *stack) {
 	int i;
 	for (i = 0; i != stack->n_stacks; ++i)
 		free(stack->stacks[i].stack);
@@ -48,7 +48,7 @@ void gap_destroy_stack_parma(gap_stack_t_parma *stack) {
 	free(stack);
 }
 
-static void gap_reset_stack_parma(gap_stack_t_parma *stack) {
+static void gap_reset_stack_parasuite(gap_stack_t_parasuite *stack) {
 	int i;
 	for (i = 0; i != stack->n_stacks; ++i)
 		stack->stacks[i].n_entries = 0;
@@ -56,20 +56,20 @@ static void gap_reset_stack_parma(gap_stack_t_parma *stack) {
 	stack->n_entries = 0;
 }
 
-static inline void gap_push_parma(gap_stack_t_parma *stack, int i, bwtint_t k,
+static inline void gap_push_parasuite(gap_stack_t_parasuite *stack, int i, bwtint_t k,
 		bwtint_t l, int n_mm, int n_gapo, int n_gape, int n_ins, int n_del,
 		int state, int is_diff, const gap_opt_t *opt, double ep_p_val, int len) {
 	//int score;
-	gap_entry_t_parma *p;
-	gap_stack1_t_parma *q;
-	int score = aln_score_parma(n_mm, n_gapo, n_gape, opt);
+	gap_entry_t_parasuite *p;
+	gap_stack1_t_parasuite *q;
+	int score = aln_score_parasuite(n_mm, n_gapo, n_gape, opt);
 	//double score = aln_score_ep(opt->X, len - i, opt);
 	//double score = pow(opt->avg_match, len - i) * pow(opt->avg_mm, n_mm);
 	q = stack->stacks + score;
 	if (q->n_entries == q->m_entries) {
 		q->m_entries = q->m_entries ? q->m_entries << 1 : 4;
-		q->stack = (gap_entry_t_parma*) realloc(q->stack,
-				sizeof(gap_entry_t_parma) * q->m_entries);
+		q->stack = (gap_entry_t_parasuite*) realloc(q->stack,
+				sizeof(gap_entry_t_parasuite) * q->m_entries);
 	}
 	p = q->stack + q->n_entries;
 	p->info = (u_int32_t) score << 21 | i;
@@ -90,8 +90,8 @@ static inline void gap_push_parma(gap_stack_t_parma *stack, int i, bwtint_t k,
 		stack->best = score;
 }
 
-static inline void gap_pop_parma(gap_stack_t_parma *stack, gap_entry_t_parma *e) {
-	gap_stack1_t_parma *q;
+static inline void gap_pop_parasuite(gap_stack_t_parasuite *stack, gap_entry_t_parasuite *e) {
+	gap_stack1_t_parasuite *q;
 	q = stack->stacks + stack->best;
 	*e = q->stack[q->n_entries - 1];
 	--(q->n_entries);
@@ -106,7 +106,7 @@ static inline void gap_pop_parma(gap_stack_t_parma *stack, gap_entry_t_parma *e)
 		stack->best = stack->n_stacks;
 }
 
-static inline void gap_shadow_parma(int x, int len, bwtint_t max,
+static inline void gap_shadow_parasuite(int x, int len, bwtint_t max,
 		int last_diff_pos, bwt_width_t *w) {
 	int i, j;
 	for (i = j = 0; i < last_diff_pos; ++i) {
@@ -119,7 +119,7 @@ static inline void gap_shadow_parma(int x, int len, bwtint_t max,
 	}
 }
 
-static inline int int_log2_parma(uint32_t v) {
+static inline int int_log2_parasuite(uint32_t v) {
 	int c = 0;
 	if (v & 0xffff0000u) {
 		v >>= 16;
@@ -142,9 +142,9 @@ static inline int int_log2_parma(uint32_t v) {
 	return c;
 }
 
-bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
+bwt_aln1_t *bwt_match_gap_parasuite(bwt_t * const bwt, int len, const ubyte_t *seq,
 		bwt_width_t *width, bwt_width_t *seed_width, const gap_opt_t *opt,
-		int *_n_aln, gap_stack_t_parma *stack) { // $seq is the reverse complement of the input read
+		int *_n_aln, gap_stack_t_parasuite *stack) { // $seq is the reverse complement of the input read
 
 	// p_value for current read mapping step
 	double p_threshold = (double) pow((double) opt->avg_match, (len - opt->X))
@@ -168,7 +168,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 		max_mm++;
 	}
 
-	int best_score = aln_score_parma(max_mm, opt->max_gapo + 1, opt->max_gape + 1,
+	int best_score = aln_score_parasuite(max_mm, opt->max_gapo + 1, opt->max_gape + 1,
 			opt);
 	int best_diff = max_mm + 1;	//, max_diff = opt->max_diff;
 	int max_diff = max_mm;
@@ -190,18 +190,18 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 	}
 
 	//for (j = 0; j != len; ++j) printf("#0 %d: [%d,%u]\t[%d,%u]\n", j, w[0][j].bid, w[0][j].w, w[1][j].bid, w[1][j].w);
-	gap_reset_stack_parma(stack); // reset stack
+	gap_reset_stack_parasuite(stack); // reset stack
 	/*int bla[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
 	 int bla2[10] = {-1,-1,-1,-1,-1,-1,-1,-1,-1,-1};
-	 gap_push_parma(stack, len, 0, bwt->seq_len, 0, 0, 0, 0, 0, 0, 0, opt, bla, bla2, 0, -1);*/
-	gap_push_parma(stack, len, 0, bwt->seq_len, 0, 0, 0, 0, 0, 0, 0, opt, 1.0,
+	 gap_push_parasuite(stack, len, 0, bwt->seq_len, 0, 0, 0, 0, 0, 0, 0, opt, bla, bla2, 0, -1);*/
+	gap_push_parasuite(stack, len, 0, bwt->seq_len, 0, 0, 0, 0, 0, 0, 0, opt, 1.0,
 			len);
 
 	//fprintf(stderr, "bla error\n");
 
 	while (stack->n_entries) {
 
-		gap_entry_t_parma e;
+		gap_entry_t_parasuite e;
 		int i, m, m_seed = 0, hit_found, allow_diff, allow_M, tmp;
 		bwtint_t k, l, cnt_k[4], cnt_l[4], occ;
 
@@ -211,7 +211,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 			max_entries = stack->n_entries;
 		if (stack->n_entries > opt->max_entries)
 			break;
-		gap_pop_parma(stack, &e); // get the best entry
+		gap_pop_parasuite(stack, &e); // get the best entry
 		k = e.k;
 		l = e.l; // SA interval
 		i = e.info & 0xffff; // length
@@ -272,7 +272,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 
 		if (hit_found) { // action for found hits
 			//fprintf(stderr, "number entries passed before hit was found: stack->n_entries=%d\n", stack->n_entries);
-			int score = aln_score_parma(e.n_mm, e.n_gapo, e.n_gape, opt);
+			int score = aln_score_parasuite(e.n_mm, e.n_gapo, e.n_gape, opt);
 			int do_add = 1;
 			//printf("#2 hits found: %d:(%u,%u)\n", e.n_mm+e.n_gapo, k, l);
 			if (n_aln == 0) {
@@ -298,7 +298,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 			}
 			if (do_add) { // append
 				bwt_aln1_t *p;
-				gap_shadow_parma(l - k + 1, len, bwt->seq_len, e.last_diff_pos,
+				gap_shadow_parasuite(l - k + 1, len, bwt->seq_len, e.last_diff_pos,
 						width);
 				if (n_aln == m_aln) {
 					m_aln <<= 1;
@@ -348,7 +348,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 
 		// indels
 		tmp = (opt->mode & BWA_MODE_LOGGAP) ?
-				int_log2_parma(e.n_gape + e.n_gapo) / 2 + 1 : e.n_gapo + e.n_gape;
+				int_log2_parasuite(e.n_gape + e.n_gapo) / 2 + 1 : e.n_gapo + e.n_gape;
 		if (allow_diff && i >= opt->indel_end_skip + tmp
 				&& len - i >= opt->indel_end_skip + tmp) {
 			if (e.state == STATE_M) { // gap open
@@ -359,7 +359,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 					if ((double) (e.ep_p_val * opt->profile.indels[INSERTION])
 							> p_threshold) {
 						//	fprintf(stderr, "insert insertion");
-						gap_push_parma(stack, i, k, l, e.n_mm, e.n_gapo + 1,
+						gap_push_parasuite(stack, i, k, l, e.n_mm, e.n_gapo + 1,
 								e.n_gape, e.n_ins + 1, e.n_del, STATE_I, 1, opt,
 								e.ep_p_val * opt->profile.indels[INSERTION],
 								len);
@@ -376,7 +376,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 							k = bwt->L2[j] + cnt_k[j] + 1;
 							l = bwt->L2[j] + cnt_l[j];
 							if (k <= l)
-								gap_push_parma(stack, i + 1, k, l, e.n_mm,
+								gap_push_parasuite(stack, i + 1, k, l, e.n_mm,
 										e.n_gapo + 1, e.n_gape, e.n_ins,
 										e.n_del + 1, STATE_D, 1, opt,
 										e.ep_p_val
@@ -387,7 +387,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 				//}
 			} else if (e.state == STATE_I) { // extention of an insertion
 				if (e.n_gape < opt->max_gape) // gap extention is allowed
-					gap_push_parma(stack, i, k, l, e.n_mm, e.n_gapo, e.n_gape + 1,
+					gap_push_parasuite(stack, i, k, l, e.n_mm, e.n_gapo, e.n_gape + 1,
 							e.n_ins + 1, e.n_del, STATE_I, 1, opt, e.ep_p_val,
 							len);
 			} else if (e.state == STATE_D) { // extention of a deletion
@@ -398,7 +398,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 							k = bwt->L2[j] + cnt_k[j] + 1;
 							l = bwt->L2[j] + cnt_l[j];
 							if (k <= l)
-								gap_push_parma(stack, i + 1, k, l, e.n_mm,
+								gap_push_parasuite(stack, i + 1, k, l, e.n_mm,
 										e.n_gapo, e.n_gape + 1, e.n_ins,
 										e.n_del + 1, STATE_D, 1, opt,
 										e.ep_p_val, len);
@@ -451,8 +451,8 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 						//} else {
 						//last_err = e.last_err;
 					}
-					//gap_push_parma(stack, i, k, l, e.n_mm + is_mm, e.n_gapo, e.n_gape, e.n_ins, e.n_del, STATE_M, is_mm, opt, e.all_mm_pos, e.all_mm_ref_char, e.all_mm_pos_counter + is_mm, last_err);
-					gap_push_parma(stack, i, k, l, e.n_mm + is_mm, e.n_gapo,
+					//gap_push_parasuite(stack, i, k, l, e.n_mm + is_mm, e.n_gapo, e.n_gape, e.n_ins, e.n_del, STATE_M, is_mm, opt, e.all_mm_pos, e.all_mm_ref_char, e.all_mm_pos_counter + is_mm, last_err);
+					gap_push_parasuite(stack, i, k, l, e.n_mm + is_mm, e.n_gapo,
 							e.n_gape, e.n_ins, e.n_del, STATE_M, is_mm, opt,
 							new_ep_p_val, len);
 				}
@@ -463,7 +463,7 @@ bwt_aln1_t *bwt_match_gap_parma(bwt_t * const bwt, int len, const ubyte_t *seq,
 			k = bwt->L2[c] + cnt_k[c] + 1;
 			l = bwt->L2[c] + cnt_l[c];
 			if (k <= l)
-				gap_push_parma(stack, i, k, l, e.n_mm, e.n_gapo, e.n_gape, e.n_ins,
+				gap_push_parasuite(stack, i, k, l, e.n_mm, e.n_gapo, e.n_gape, e.n_ins,
 						e.n_del, STATE_M, 0, opt, e.ep_p_val, len);
 		}
 	}

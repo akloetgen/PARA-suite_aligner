@@ -1,5 +1,5 @@
 /*
- * parmacore.c
+ * parasuitecore.c
  *
  *  Created on: 17.07.2014
  *      Author: akloetgen
@@ -16,8 +16,8 @@
 #include "config.h"
 #endif
 #include "bwtaln.h"
-#include "parmacore.h"
-#include "parma.h"
+#include "parasuitecore.h"
+#include "parasuite.h"
 #include "utils.h"
 #include "bwa.h"
 
@@ -150,7 +150,7 @@ int calculateAverageProbabilites(gap_opt_t *opt, int including_indels) {
 	return 0;
 }
 
-gap_opt_t *gap_init_opt_parma() {
+gap_opt_t *gap_init_opt_parasuite() {
 	gap_opt_t *o;
 	o = (gap_opt_t*) calloc(1, sizeof(gap_opt_t));
 	/* IMPORTANT: s_mm*10 should be about the average base error
@@ -187,7 +187,7 @@ gap_opt_t *gap_init_opt_parma() {
 	return o;
 }
 
-int parma_cal_avgdiff(const gap_opt_t *opt, int length) {
+int parasuite_cal_avgdiff(const gap_opt_t *opt, int length) {
 	int temp_allowed_mm;
 	if ((temp_allowed_mm = floor((double) length * (opt->avg_mm * 14))) > 2) {
 		return temp_allowed_mm;
@@ -196,7 +196,7 @@ int parma_cal_avgdiff(const gap_opt_t *opt, int length) {
 }
 
 // width must be filled as zero
-int bwt_cal_width_parma(const bwt_t *bwt, int len, const ubyte_t *str,
+int bwt_cal_width_parasuite(const bwt_t *bwt, int len, const ubyte_t *str,
 		bwt_width_t *width) {
 	bwtint_t k, l, ok, ol;
 	int i, bid;
@@ -223,11 +223,11 @@ int bwt_cal_width_parma(const bwt_t *bwt, int len, const ubyte_t *str,
 	return bid;
 }
 
-void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
+void parasuite_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 		bwa_seq_t *seqs, const gap_opt_t *opt) {
 	//fprintf(stderr, "bla\n");
 	int i, j, max_l = 0, max_len, avg_len = 0;
-	gap_stack_t_parma *stack;
+	gap_stack_t_parasuite *stack;
 	bwt_width_t *w, *seed_w;
 	gap_opt_t local_opt = *opt;
 
@@ -243,7 +243,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 
 	//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(max_len, BWA_AVG_ERR, opt->fnr);
 	if (opt->X == -1)
-		local_opt.X = parma_cal_avgdiff(opt, avg_len);
+		local_opt.X = parasuite_cal_avgdiff(opt, avg_len);
 	//fprintf(stderr, "[%s] for read lenght %d, average error X = %d\n", __func__, avg_len, local_opt.X);
 
 	if (local_opt.X < local_opt.max_gapo)
@@ -255,7 +255,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 	// that depends on the actual error profile rather than generating a too small stack
 	// that produces a segmentation fault
 	// IMPORTANT IMPROVEMENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-	stack = gap_init_stack_parma(local_opt.X + 1, local_opt.max_gapo,
+	stack = gap_init_stack_parasuite(local_opt.X + 1, local_opt.max_gapo,
 			local_opt.max_gape, &local_opt);
 	//fprintf(stderr, "%.2f sec\n", (float)(clock() - t) / CLOCKS_PER_SEC); t = clock();
 
@@ -276,22 +276,22 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 			w = (bwt_width_t*) realloc(w, (max_l + 1) * sizeof(bwt_width_t));
 			memset(w, 0, (max_l + 1) * sizeof(bwt_width_t));
 		}
-		bwt_cal_width_parma(bwt, p->len, p->seq, w);
+		bwt_cal_width_parasuite(bwt, p->len, p->seq, w);
 
 		// HIER DAS SELBE WIE OBEN: ERSETZEN DURCH EP?!?!
 		//if (opt->fnr > 0.0) local_opt.max_diff = bwa_cal_maxdiff_ep(p->len, BWA_AVG_ERR, opt->fnr);
 		if (opt->X == -1)
-			local_opt.X = parma_cal_avgdiff(opt, p->len);
+			local_opt.X = parasuite_cal_avgdiff(opt, p->len);
 		local_opt.seed_len =
 				opt->seed_len < p->len ? opt->seed_len : 0x7fffffff;
 		if (p->len > opt->seed_len)
-			bwt_cal_width_parma(bwt, opt->seed_len,
+			bwt_cal_width_parasuite(bwt, opt->seed_len,
 					p->seq + (p->len - opt->seed_len), seed_w);
 		// core function
 		for (j = 0; j < p->len; ++j) // we need to complement
 			p->seq[j] = p->seq[j] > 3 ? 4 : 3 - p->seq[j];
 
-		p->aln = bwt_match_gap_parma(bwt, p->len, p->seq, w,
+		p->aln = bwt_match_gap_parasuite(bwt, p->len, p->seq, w,
 				p->len <= opt->seed_len ? 0 : seed_w, &local_opt, &p->n_aln,
 				stack);
 
@@ -307,7 +307,7 @@ void parma_cal_sa_reg_gap(int tid, bwt_t * const bwt, int n_seqs,
 	}
 	free(seed_w);
 	free(w);
-	gap_destroy_stack_parma(stack);
+	gap_destroy_stack_parasuite(stack);
 }
 
 #ifdef HAVE_PTHREAD
@@ -322,12 +322,12 @@ typedef struct {
 static void *worker(void *data)
 {
 	thread_aux_t *d = (thread_aux_t*)data;
-	parma_cal_sa_reg_gap(d->tid, d->bwt, d->n_seqs, d->seqs, d->opt);
+	parasuite_cal_sa_reg_gap(d->tid, d->bwt, d->n_seqs, d->seqs, d->opt);
 	return 0;
 }
 #endif
 
-bwa_seqio_t *parma_open_reads(int mode, const char *fn_fa) {
+bwa_seqio_t *parasuite_open_reads(int mode, const char *fn_fa) {
 	bwa_seqio_t *ks;
 	if (mode & BWA_MODE_BAM) { // open BAM
 		int which = 0;
@@ -353,7 +353,7 @@ void bwa_alnep_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 	bwt_t *bwt;
 
 	// initialization
-	ks = parma_open_reads(opt->mode, fn_fa);
+	ks = parasuite_open_reads(opt->mode, fn_fa);
 
 	{ // load BWT
 		char *str = (char*) calloc(strlen(prefix) + 10, 1);
@@ -372,12 +372,12 @@ void bwa_alnep_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 		tot_seqs += n_seqs;
 		t = clock();
 
-		fprintf(stderr, "[parma_core] calculate SA coordinate... ");
+		fprintf(stderr, "[parasuite_core] calculate SA coordinate... ");
 
 #ifdef HAVE_PTHREAD
 		if (opt->n_threads <= 1) { // no multi-threading at all
 			//fprintf(stderr, "\nHAVE_PTHREAD defined: single threading\n");
-			parma_cal_sa_reg_gap(0, bwt, n_seqs, seqs, opt);
+			parasuite_cal_sa_reg_gap(0, bwt, n_seqs, seqs, opt);
 		} else {
 			//fprintf(stderr, "\nHAVE_PTHREAD defined: multi threading\n");
 			pthread_t *tid;
@@ -398,14 +398,14 @@ void bwa_alnep_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 		}
 #else
 		//fprintf(stderr, "\nHAVE_PTHREAD not defined.\n");
-		parma_cal_sa_reg_gap(0, bwt, n_seqs, seqs, opt);
+		parasuite_cal_sa_reg_gap(0, bwt, n_seqs, seqs, opt);
 #endif
 
 		fprintf(stderr, "%.2f sec\n", (float) (clock() - t) / CLOCKS_PER_SEC);
 		t = clock();
 
 		t = clock();
-		fprintf(stderr, "[parma_core] write to the disk... ");
+		fprintf(stderr, "[parasuite_core] write to the disk... ");
 		for (i = 0; i < n_seqs; ++i) {
 			bwa_seq_t *p = seqs + i;
 			err_fwrite(&p->n_aln, 4, 1, stdout);
@@ -417,7 +417,7 @@ void bwa_alnep_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 		t = clock();
 
 		bwa_free_read_seq(n_seqs, seqs);
-		fprintf(stderr, "[parma_core] %d sequences have been processed.\n",
+		fprintf(stderr, "[parasuite_core] %d sequences have been processed.\n",
 				tot_seqs);
 	}
 
@@ -426,13 +426,13 @@ void bwa_alnep_core(const char *prefix, const char *fn_fa, const gap_opt_t *opt)
 	bwa_seq_close(ks);
 }
 
-int bwa_parma(int argc, char *argv[]) {
+int bwa_parasuite(int argc, char *argv[]) {
 	int c, opte = -1;
 	gap_opt_t *opt;
 	char *prefix;
 	int error_profile_set = 0, indel_profile_set = 0;
 
-	opt = gap_init_opt_parma();
+	opt = gap_init_opt_parasuite();
 	while ((c = getopt(argc, argv,
 			"X:p:g:o:e:i:d:l:k:LR:m:t:NM:O:E:q:f:b012YB:I:D:")) >= 0) {
 		switch (c) {
@@ -552,17 +552,17 @@ int bwa_parma(int argc, char *argv[]) {
 
 	/*int q;
 	 for (q = 14; q < 40; q++) {
-	 fprintf(stderr, "length=%d; X=%d\n", q, parma_cal_avgdiff(opt, q));
+	 fprintf(stderr, "length=%d; X=%d\n", q, parasuite_cal_avgdiff(opt, q));
 	 }*/
 
 	if (optind + 2 > argc) {
 		fprintf(stderr, "\n");
-		fprintf(stderr, "Program: PARMA addon for bwa version 0.7.8\n");
+		fprintf(stderr, "Program: parasuite addon for bwa version 0.7.8\n");
 		fprintf(stderr, "Version: 0.5 alpha\n");
 		fprintf(stderr,
 				"Contact: Andreas Kloetgen <andreas.kloetgen@hhu.de>\n\n");
 		fprintf(stderr,
-				"Usage:   bwa parma [options] <reference_prefix> <in.fq>\n\n");
+				"Usage:   bwa parasuite [options] <reference_prefix> <in.fq>\n\n");
 		fprintf(stderr,
 				"Options: -X NUM    median #diff (int). Real #diff depends on error profile. [%.d]\n",
 				opt->X);
