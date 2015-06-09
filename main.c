@@ -15,7 +15,7 @@ int bwa_index(int argc, char *argv[]);
 int bwt_bwtgen_main(int argc, char *argv[]);
 
 int bwa_aln(int argc, char *argv[]);
-int bwa_parma(int argc, char *argv[]);
+int bwa_parasuite(int argc, char *argv[]);
 int bwa_sai2sam_se(int argc, char *argv[]);
 int bwa_sai2sam_pe(int argc, char *argv[]);
 
@@ -40,7 +40,7 @@ static int usage()
 	fprintf(stderr, "         fastmap       identify super-maximal exact matches\n");
 	fprintf(stderr, "         pemerge       merge overlapping paired ends (EXPERIMENTAL)\n");
 	fprintf(stderr, "         aln           gapped/ungapped alignment\n");
-	fprintf(stderr, "         parma         alignment using an empirical error profile\n");
+	fprintf(stderr, "         parasuite         alignment using an empirical error profile\n");
 	fprintf(stderr, "         samse         generate alignment (single ended)\n");
 	fprintf(stderr, "         sampe         generate alignment (paired ended)\n");
 	fprintf(stderr, "         bwasw         BWA-SW for long queries\n");
@@ -76,7 +76,7 @@ int main(int argc, char *argv[])
 	else if (strcmp(argv[1], "bwt2sa") == 0) ret = bwa_bwt2sa(argc-1, argv+1);
 	else if (strcmp(argv[1], "index") == 0) ret = bwa_index(argc-1, argv+1);
 	else if (strcmp(argv[1], "aln") == 0) ret = bwa_aln(argc-1, argv+1);
-	else if (strcmp(argv[1], "parma") == 0) ret = bwa_parma(argc-1, argv+1);
+	else if (strcmp(argv[1], "parasuite") == 0) ret = bwa_parasuite(argc-1, argv+1);
 	else if (strcmp(argv[1], "samse") == 0) ret = bwa_sai2sam_se(argc-1, argv+1);
 	else if (strcmp(argv[1], "sampe") == 0) ret = bwa_sai2sam_pe(argc-1, argv+1);
 	else if (strcmp(argv[1], "bwtsw2") == 0) ret = bwa_bwtsw2(argc-1, argv+1);
